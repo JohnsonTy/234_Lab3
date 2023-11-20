@@ -16,7 +16,6 @@ namespace MMABooksTests
     [TestFixture]
     public class StateTests
     {
-
         [SetUp]
         public void TestResetDatabase()
         {

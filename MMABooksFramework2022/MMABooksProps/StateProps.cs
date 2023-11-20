@@ -31,7 +31,6 @@ namespace MMABooksProps
             return p;
         }
 
-        // this is always the same ... so I should have made IBaseProps and abstract class
         public string GetState()
         {
             string jsonString;

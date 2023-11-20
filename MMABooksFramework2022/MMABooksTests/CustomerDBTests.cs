@@ -1,19 +1,21 @@
-﻿using NUnit.Framework;
-
+﻿using MMABooksDB;
 using MMABooksProps;
-using MMABooksDB;
+using MySql.Data.MySqlClient;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 using DBCommand = MySql.Data.MySqlClient.MySqlCommand;
-using System.Data;
-
-using System.Collections.Generic;
-using System;
-using MySql.Data.MySqlClient;
-using Org.BouncyCastle.Bcpg;
+using MMABooksBusiness;
 
 namespace MMABooksTests
 {
-    internal class CustomerDBTest
+    internal class CustomerDBTests
     {
         CustomerDB db;
 
@@ -30,9 +32,72 @@ namespace MMABooksTests
         [Test]
         public void TestRetrieve()
         {
-            CustomerProps p = (CustomerProps)db.Retrieve(1);
-            Assert.AreEqual(1, p.CustID);
-            Assert.AreEqual("Molunguri, A", p.Name);
+            CustomerProps c = (CustomerProps)db.Retrieve(500);
+            Assert.AreEqual(500, c.CustomerID);
+            Assert.AreEqual("Titus, Commander", c.Name);
+        }
+
+        [Test]
+        public void TestRetrieveAll()
+        {
+            List<CustomerProps> list = (List<CustomerProps>)db.RetrieveAll();
+            Assert.AreEqual(696, list.Count);
+        }
+        [Test]
+        public void TestDelete()
+        {
+            Customer c = new Customer(1);
+            c.Delete();
+            c.Save();
+            Assert.Throws<Exception>(() => new Customer(1));
+        }
+
+
+        [Test]
+        public void TestDeleteForeignKeyConstraint()
+        {
+            CustomerProps c = (CustomerProps)db.Retrieve(6);
+            Assert.Throws<MySqlException>(() => db.Delete(c));
+        }
+
+        [Test]
+        public void TestUpdate()
+        {
+            CustomerProps c = (CustomerProps)db.Retrieve(10);
+            c.Name = "Test, B";
+            Assert.True(db.Update(c));
+            c = (CustomerProps)db.Retrieve("Test, B");
+            Assert.AreEqual("Test, B", c.Name);
+        }
+
+        [Test]
+        public void TestUpdateFieldTooLong()
+        {
+            CustomerProps c = (CustomerProps)db.Retrieve(50);
+            c.Name = "Testing12345";
+            Assert.Throws<MySqlException>(() => db.Update(c));
+        }
+
+        [Test]
+        public void TestCreate()
+        {
+            CustomerProps c = new CustomerProps();
+            c.Name = "testName";
+            c.Address = "testAddress";
+            c.City = "testCity";
+            c.State = "OR";
+            c.ZipCode = "12345";
+            db.Create(c);
+            CustomerProps c2 = (CustomerProps)db.Retrieve(c.CustomerID);
+            Assert.AreEqual(c.GetState(), c2.GetState());
+        }
+
+        [Test]
+        public void TestCreatePrimaryKeyViolation()
+        {
+            CustomerProps c = new CustomerProps();
+            c.Name = "testName";
+            Assert.Throws<MySqlException>(() => db.Create(c));
         }
     }
 }
